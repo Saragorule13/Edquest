@@ -1,9 +1,58 @@
 import React, { useState } from 'react';
-import { Shield, HelpCircle, Wifi, Lock } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Shield, HelpCircle, Wifi, Lock, Loader2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { supabase } from '../supabaseClient';
 
 function Login() {
   const [role, setRole] = useState('student');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+
+  const handleStudentAuth = async (isSignUp, e) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      let result;
+      if (isSignUp) {
+        result = await supabase.auth.signUp({ email, password });
+      } else {
+        result = await supabase.auth.signInWithPassword({ email, password });
+      }
+
+      if (result.error) throw result.error;
+      
+      // On success, redirect to dashboard
+      navigate('/exam');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAdminLogin = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) throw signInError;
+      
+      navigate('/exam'); // Assume admin goes to some dashboard, here we will send them to /exam for now
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const clearError = () => setError(null);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-[var(--font-body)]">
@@ -48,7 +97,7 @@ function Login() {
           {/* Main Headings */}
           <div className="text-center space-y-3 mb-4">
             <h1 className="font-[var(--font-heading)] text-4xl md:text-5xl font-black text-[#111827] tracking-tight">
-              Secure Examination Gateway
+              {role === 'student' ? 'Secure Examination Gateway' : 'Institutional Management'}
             </h1>
             <p className="text-sm font-medium text-gray-600">
               Log in to your secure testing environment.
@@ -57,12 +106,17 @@ function Login() {
 
           {/* Login Card */}
           <div className="w-[420px] bg-white border-[3px] border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-md flex flex-col">
-            <div className="flex-1 p-8 sm:p-10 flex flex-col gap-8">
+            <div className="flex-1 p-8 sm:p-10 flex flex-col gap-6">
               
               {/* Role Toggle */}
               <div className="grid grid-cols-2 border-[2px] border-black p-1 bg-gray-50">
                 <button
-                  onClick={() => setRole('student')}
+                  onClick={() => {
+                    setRole('student');
+                    clearError();
+                    setEmail('');
+                    setPassword('');
+                  }}
                   className={`py-3 text-[10px] font-black tracking-[0.15em] uppercase transition-all ${
                     role === 'student'
                       ? 'bg-primary border-2 border-black text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
@@ -72,7 +126,12 @@ function Login() {
                   STUDENT
                 </button>
                 <button
-                  onClick={() => setRole('admin')}
+                  onClick={() => {
+                    setRole('admin');
+                    clearError();
+                    setEmail('');
+                    setPassword('');
+                  }}
                   className={`py-3 text-[10px] font-black tracking-[0.15em] uppercase transition-all ${
                     role === 'admin'
                       ? 'bg-primary border-2 border-black text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
@@ -82,6 +141,14 @@ function Login() {
                   ADMIN
                 </button>
               </div>
+
+              {/* Error Message */}
+              {error && (
+                <div className="bg-red-50 border-2 border-red-500 p-3 flex items-start gap-2">
+                  <span className="text-red-500 text-sm font-black mt-0.5">!</span>
+                  <p className="text-xs text-red-700 font-medium">{error}</p>
+                </div>
+              )}
 
               {role === 'student' ? (
                 <>
@@ -109,15 +176,18 @@ function Login() {
                   </div>
 
                   {/* Form */}
-                  <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+                  <form className="space-y-6">
                     <div className="space-y-2">
                       <label className="block text-[10px] font-black tracking-[0.15em] text-[#111827] uppercase">
                         STUDENT ID / EMAIL
                       </label>
                       <input
-                        type="text"
-                        placeholder="e.g. STU-99234"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="e.g. stu@university.edu"
                         className="w-full border-[2px] border-black py-3 px-4 text-sm font-medium focus:outline-none focus:ring-0 placeholder:text-gray-400 bg-white"
+                        required
                       />
                     </div>
 
@@ -132,17 +202,31 @@ function Login() {
                       </div>
                       <input
                         type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
                         className="w-full border-[2px] border-black py-3 px-4 text-sm font-medium focus:outline-none focus:ring-0 placeholder:text-gray-400 bg-white"
+                        required
                       />
                     </div>
 
-                    <div className="pt-2">
-                      <Link to="/">
-                        <button className="w-full bg-primary border-[3px] border-black text-black text-[12px] font-black tracking-[0.15em] uppercase py-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">
-                          ACCESS EXAM DASHBOARD
-                        </button>
-                      </Link>
+                    <div className="pt-2 flex gap-3">
+                      <button
+                        type="button"
+                        onClick={(e) => handleStudentAuth(false, e)}
+                        disabled={loading}
+                        className="flex-1 bg-primary border-[3px] border-black text-black text-[11px] font-black tracking-[0.15em] uppercase py-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center justify-center gap-2"
+                      >
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'SIGN IN'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => handleStudentAuth(true, e)}
+                        disabled={loading}
+                        className="flex-1 bg-white border-[3px] border-black text-black text-[11px] font-black tracking-[0.15em] uppercase py-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center justify-center gap-2"
+                      >
+                         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'REGISTER'}
+                      </button>
                     </div>
                   </form>
                 </>
@@ -165,15 +249,18 @@ function Login() {
                   </div>
 
                   {/* Form Admin */}
-                  <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+                  <form className="space-y-4" onSubmit={handleAdminLogin}>
                     <div className="space-y-2">
                       <label className="block text-[10px] font-black tracking-[0.15em] text-[#111827] uppercase">
                         INSTITUTIONAL EMAIL
                       </label>
                       <input
-                        type="text"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         placeholder="admin@university.edu"
                         className="w-full border-[2px] border-black py-3 px-4 text-sm font-medium focus:outline-none focus:ring-0 placeholder:text-gray-400 bg-white"
+                        required
                       />
                     </div>
 
@@ -188,8 +275,11 @@ function Login() {
                       </div>
                       <input
                         type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
                         className="w-full border-[2px] border-black py-3 px-4 text-sm font-medium focus:outline-none focus:ring-0 placeholder:text-gray-400 bg-white"
+                        required
                       />
                     </div>
 
@@ -202,8 +292,11 @@ function Login() {
                     </div>
 
                     <div className="pt-2">
-                      <button className="w-full bg-[#111827] border-[2px] border-black text-white text-[11px] font-black tracking-[0.15em] uppercase py-4 shadow-[4px_4px_0px_0px_var(--color-primary)] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_var(--color-primary)] transition-all">
-                        ADMINISTRATIVE ACCESS
+                      <button 
+                         type="submit"
+                         disabled={loading}
+                         className="w-full bg-[#111827] border-[2px] border-black text-white text-[11px] font-black tracking-[0.15em] uppercase py-4 shadow-[4px_4px_0px_0px_var(--color-primary)] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_var(--color-primary)] transition-all flex items-center justify-center gap-2">
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : 'ADMINISTRATIVE ACCESS'}
                       </button>
                     </div>
 
