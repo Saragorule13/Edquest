@@ -1,9 +1,10 @@
 import React from 'react'
+import ExamScreen from './components/ExamScreen';
 
 function App() {
   return (
-    <div>App</div>
-  )
+    <ExamScreen />
+  );
 }
 
 export default App

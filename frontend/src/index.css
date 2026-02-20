@@ -1,1 +1,19 @@
 @import "tailwindcss";
+
+@layer utilities {
+  .shadow-neo {
+    box-shadow: 6px 6px 0px 0px rgba(0, 0, 0, 1);
+  }
+  .shadow-neo-sm {
+    box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+  }
+}
+
+body {
+  font-family: 'Space Mono', 'Courier New', monospace;
+  background-color: #FAFAFA;
+}
+
+.font-serif {
+  font-family: 'Merriweather', 'Times New Roman', serif;
+}
