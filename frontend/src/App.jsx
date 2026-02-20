@@ -7,6 +7,7 @@ import SystemInfrastructure from './components/SystemInfrastructure';
 import CTASection from './components/CTASection';
 import Footer from './components/Footer';
 import ExamScreen from './components/ExamScreen';
+import Login from './components/Login';
 
 function MainLayout() {
   return (
@@ -26,6 +27,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<MainLayout />} />
+        <Route path="/login" element={<Login/>} />
         <Route path="/exam" element={<ExamScreen />} />
       </Routes>
     </BrowserRouter>
