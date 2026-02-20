@@ -1,10 +1,35 @@
-import React from 'react'
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import HeroSection from './components/HeroSection';
+import InstitutionsTicker from './components/InstitutionsTicker';
+import SystemInfrastructure from './components/SystemInfrastructure';
+import CTASection from './components/CTASection';
+import Footer from './components/Footer';
 import ExamScreen from './components/ExamScreen';
 
-function App() {
+function MainLayout() {
   return (
-    <ExamScreen />
+    <div className="min-h-screen bg-white">
+      <Navbar />
+      <HeroSection />
+      <InstitutionsTicker />
+      <SystemInfrastructure />
+      <CTASection />
+      <Footer />
+    </div>
   );
 }
 
-export default App
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<MainLayout />} />
+        <Route path="/exam" element={<ExamScreen />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default App;
