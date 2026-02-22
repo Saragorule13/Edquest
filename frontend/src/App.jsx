@@ -8,6 +8,7 @@ import CTASection from './components/CTASection';
 import Footer from './components/Footer';
 import ExamScreen from './components/ExamScreen';
 import Login from './components/Login';
+import AdminDashboard from './components/admin/AdminDashboard';
 import { supabase } from './supabaseClient';
 
 function MainLayout() {
@@ -60,6 +61,7 @@ function App() {
       <Routes>
         <Route path="/" element={<MainLayout />} />
         <Route path="/login" element={<Login/>} />
+        <Route path="/admin" element={<AdminDashboard />} />
         <Route 
           path="/exam" 
           element={
