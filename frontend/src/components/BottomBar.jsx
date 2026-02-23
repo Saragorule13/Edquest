@@ -1,6 +1,6 @@
 import React from 'react';
 
-const BottomBar = ({ onPreviousClick, onSubmitClick }) => {
+const BottomBar = ({ onPreviousClick, onNextClick, onSubmitClick, progressPercentage = 0, completedCount = 0, totalCount = 0, isFirstQuestion = false, isLastQuestion = false }) => {
     return (
         <div className="fixed bottom-0 left-16 md:left-20 right-0 bg-white border-t-4 border-black px-8 py-4 flex flex-col md:flex-row shadow-[0px_-4px_0px_0px_rgba(0,0,0,1)] z-50">
 
@@ -8,14 +8,18 @@ const BottomBar = ({ onPreviousClick, onSubmitClick }) => {
             <div className="flex justify-between items-center w-full mb-4 md:absolute md:bottom-20 md:left-0 md:px-8 md:mb-0">
                 <button
                     onClick={onPreviousClick}
-                    className="flex items-center gap-3 border-4 border-black px-8 py-4 font-bold tracking-widest bg-white shadow-neo hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all"
+                    disabled={isFirstQuestion}
+                    className={`flex items-center gap-3 border-4 border-black px-8 py-4 font-bold tracking-widest bg-white shadow-neo transition-all ${isFirstQuestion ? 'opacity-50 cursor-not-allowed' : 'hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></svg>
                     PREVIOUS
                 </button>
 
-                <button className="flex items-center gap-3 border-4 border-black px-8 py-4 font-bold tracking-widest bg-black text-white shadow-neo hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all">
-                    SAVE & CONTINUE
+                <button 
+                    onClick={isLastQuestion ? onSubmitClick : onNextClick}
+                    className="flex items-center gap-3 border-4 border-black px-8 py-4 font-bold tracking-widest bg-black text-white shadow-neo hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all"
+                >
+                    {isLastQuestion ? 'FINISH' : 'SAVE & CONTINUE'}
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
                 </button>
             </div>
@@ -27,16 +31,16 @@ const BottomBar = ({ onPreviousClick, onSubmitClick }) => {
                 <div className="flex-1 max-w-sm w-full mb-4 md:mb-0">
                     <div className="flex justify-between text-xs font-bold tracking-widest mb-1">
                         <span>TOTAL PROGRESS</span>
-                        <span>72%</span>
+                        <span>{Math.round(progressPercentage)}%</span>
                     </div>
                     <div className="h-3 w-full border-2 border-black flex items-center bg-white p-[2px]">
-                        <div className="h-full bg-[#c44f35] border-r-2 border-black patterned-bg" style={{ width: '72%' }}></div>
+                        <div className="h-full bg-[#c44f35] border-r-2 border-black patterned-bg" style={{ width: `${progressPercentage}%` }}></div>
                     </div>
                 </div>
 
                 {/* Status text */}
                 <div className="flex-1 flex justify-center text-xs font-bold tracking-widest">
-                    SESSION STATUS: <span className="text-[#c44f35] ml-2 font-black">LOCKED</span> | 36 / 50 COMPLETED
+                    SESSION STATUS: <span className="text-[#c44f35] ml-2 font-black">ACTIVE</span> | {completedCount} / {totalCount} COMPLETED
                 </div>
 
                 {/* Action text */}

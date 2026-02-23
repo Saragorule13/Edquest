@@ -44,7 +44,7 @@ function Login() {
       const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) throw signInError;
       
-      navigate('/exam'); // Assume admin goes to some dashboard, here we will send them to /exam for now
+      navigate('/admin'); // Assume admin goes to some dashboard, here we will send them to /exam for now
     } catch (err) {
       setError(err.message);
     } finally {

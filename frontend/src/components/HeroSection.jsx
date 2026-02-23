@@ -50,9 +50,11 @@ function HeroSection() {
 
             {/* Buttons */}
             <div className="flex flex-wrap gap-6 pt-2">
-              <button className="bg-primary text-black text-[11px] font-bold tracking-[0.15em] uppercase px-8 py-4 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center gap-2">
-                Get Started
-              </button>
+              <a href="/login">
+                <button className="bg-primary text-black text-[11px] font-bold tracking-[0.15em] uppercase px-8 py-4 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center gap-2">
+                  Get Started
+                </button>
+              </a>
               <button className="bg-white text-black text-[11px] font-bold tracking-[0.15em] uppercase px-8 py-4 border-2 border-black hover:bg-gray-50 transition-colors">
                 View Technical Specs
               </button>

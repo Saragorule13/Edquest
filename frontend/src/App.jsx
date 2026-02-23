@@ -8,7 +8,17 @@ import CTASection from './components/CTASection';
 import Footer from './components/Footer';
 import ExamScreen from './components/ExamScreen';
 import Login from './components/Login';
+import AdminLayout from './components/admin/AdminLayout';
 import AdminDashboard from './components/admin/AdminDashboard';
+import LiveMonitoring from './components/admin/LiveMonitoring';
+import SessionArchive from './components/admin/SessionArchive';
+import ViolationReports from './components/admin/ViolationReports';
+import UserManagement from './components/admin/UserManagement';
+import Settings from './components/admin/Settings';
+import SystemStatus from './components/admin/SystemStatus';
+import AddTest from './components/admin/AddTest';
+import AddQuestions from './components/admin/AddQuestions';
+import StudentDashboard from './components/StudentDashboard';
 import { supabase } from './supabaseClient';
 
 function MainLayout() {
@@ -61,9 +71,35 @@ function App() {
       <Routes>
         <Route path="/" element={<MainLayout />} />
         <Route path="/login" element={<Login/>} />
-        <Route path="/admin" element={<AdminDashboard />} />
+        
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="live" element={<LiveMonitoring />} />
+          <Route path="archive" element={<SessionArchive />} />
+          <Route path="violations" element={<ViolationReports />} />
+          <Route path="users" element={<UserManagement />} />
+          <Route path="add-test" element={<AddTest />} />
+          <Route path="add-questions" element={<AddQuestions />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="status" element={<SystemStatus />} />
+        </Route>
         <Route 
-          path="/exam" 
+          path="/dashboard" 
+          element={
+            <ProtectedRoute>
+              <StudentDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route
+        path='/exam'
+        element={
+          <StudentDashboard/>
+        }>
+
+        </Route>
+        <Route 
+          path="/exam/:testId" 
           element={
             <ProtectedRoute>
               <ExamScreen />
