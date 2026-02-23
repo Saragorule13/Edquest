@@ -7,6 +7,7 @@ import QuestionBlock from './QuestionBlock';
 import OptionsGrid from './OptionsGrid';
 import BottomBar from './BottomBar';
 import Notification from './Notification';
+import ProctorAgent from './ProctorAgent';
 
 const ExamScreen = () => {
     const { testId } = useParams();
@@ -15,11 +16,11 @@ const ExamScreen = () => {
     const [testInfo, setTestInfo] = useState(null);
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
-    
+
     // answers is an object mapping question INDEX to the selected option string
     const [answers, setAnswers] = useState({});
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    
+
     const [notifications, setNotifications] = useState([]);
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
@@ -71,7 +72,7 @@ const ExamScreen = () => {
     const handleOptionSelect = (optionIndex) => {
         const currentQuestion = questions[currentQuestionIndex];
         const selectedText = currentQuestion.options[optionIndex];
-        
+
         setAnswers(prev => ({
             ...prev,
             [currentQuestionIndex]: selectedText
@@ -94,23 +95,23 @@ const ExamScreen = () => {
         // Calculate score
         let earnedPoints = 0;
         let totalPoints = 0;
-        
+
         questions.forEach((q, idx) => {
             totalPoints += Number(q.points);
             if (answers[idx] === q.correct_answer) {
                 earnedPoints += Number(q.points);
             }
         });
-        
+
         // Final score out of 100 optional, but let's just use raw points.
         const calculatedScore = totalPoints > 0 ? (earnedPoints / totalPoints) * 100 : 0;
-        
+
         setSubmitting(true);
-        
+
         try {
             // Get user
             const { data: { user } } = await supabase.auth.getUser();
-            
+
             if (user) {
                 // Insert attempt
                 const { error } = await supabase
@@ -122,7 +123,7 @@ const ExamScreen = () => {
                         status: 'completed',
                         completed_at: new Date().toISOString()
                     }]);
-                
+
                 if (error) throw error;
             }
 
@@ -151,7 +152,7 @@ const ExamScreen = () => {
         return (
             <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-8 font-mono">
                 <div className="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] text-center text-xl font-bold uppercase">
-                    No questions mapped for this designation.<br/>
+                    No questions mapped for this designation.<br />
                     <button onClick={() => navigate('/dashboard')} className="mt-6 bg-[#F5A623] px-6 py-2 border-2 border-black">RETURN</button>
                 </div>
             </div>
@@ -179,12 +180,12 @@ const ExamScreen = () => {
                         </div>
                         <h2 className="text-4xl font-black uppercase tracking-tighter mb-4">Exam Completed</h2>
                         <p className="text-xl font-bold mb-8 uppercase text-gray-600">Secure Submission Verified.</p>
-                        
+
                         <div className="bg-gray-100 border-2 border-black p-6 w-full mb-8 font-bold text-lg">
                             SCORE: {score.toFixed(1)}%
                         </div>
 
-                        <button 
+                        <button
                             onClick={() => navigate('/dashboard')}
                             className="w-full bg-black text-white hover:bg-[#F5A623] hover:text-black border-4 border-black font-black uppercase py-4 px-8 text-xl transition-colors tracking-widest"
                         >
@@ -195,9 +196,9 @@ const ExamScreen = () => {
             )}
 
             <div className={`flex flex-1 overflow-visible relative ${submitted ? 'blur-sm pointer-events-none' : ''}`}>
-                <Sidebar 
-                    totalQuestions={questions.length} 
-                    currentQuestion={currentQuestionIndex + 1} 
+                <Sidebar
+                    totalQuestions={questions.length}
+                    currentQuestion={currentQuestionIndex + 1}
                     answers={answers}
                 />
 
@@ -247,6 +248,11 @@ const ExamScreen = () => {
                     />
                 ))}
             </div>
+
+            {/* Real-time Proctor Agent Overlay */}
+            {!submitted && (
+                <ProctorAgent addNotification={addNotification} />
+            )}
         </div>
     );
 };
