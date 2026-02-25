@@ -37,9 +37,11 @@ function Navbar() {
 
       {/* CTA */}
       <div className="flex items-center gap-4">
-        <button className="hidden md:block bg-black text-white text-[10px] font-bold tracking-[0.15em] uppercase px-8 py-3.5 hover:bg-gray-800 transition-colors">
-          Launch Portal
-        </button>
+        <a href="/login">
+          <button className="hidden md:block bg-black text-white text-[10px] font-bold tracking-[0.15em] uppercase px-8 py-3.5 hover:bg-gray-800 transition-colors">
+            Launch Portal
+          </button>
+        </a>
         <button className="md:hidden text-black pr-2">
           <Menu className="w-6 h-6" />
         </button>
