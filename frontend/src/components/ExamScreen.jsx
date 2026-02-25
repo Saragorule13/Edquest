@@ -25,6 +25,7 @@ const ExamScreen = () => {
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [score, setScore] = useState(0);
+    const [isBlurred, setIsBlurred] = useState(false);
 
     const addNotification = (type, title, systemMsg, message) => {
         const id = Date.now();
@@ -68,6 +69,19 @@ const ExamScreen = () => {
 
         fetchExamData();
     }, [testId]);
+
+    useEffect(() => {
+        const handleBlur = () => setIsBlurred(true);
+        const handleFocus = () => setIsBlurred(false);
+
+        window.addEventListener('blur', handleBlur);
+        window.addEventListener('focus', handleFocus);
+
+        return () => {
+            window.removeEventListener('blur', handleBlur);
+            window.removeEventListener('focus', handleFocus);
+        };
+    }, []);
 
     const handleOptionSelect = (optionIndex) => {
         const currentQuestion = questions[currentQuestionIndex];
@@ -170,6 +184,19 @@ const ExamScreen = () => {
     return (
         <div className="min-h-screen bg-[#FAFAFA] flex flex-col font-mono text-black">
             <TopBar />
+
+            {/* Focus Lost Blur Overlay */}
+            {isBlurred && !submitted && (
+                <div className="fixed inset-0 bg-white/40 backdrop-blur-md z-[300] flex items-center justify-center p-4">
+                    <div className="bg-white border-4 border-black p-8 text-center shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-lg">
+                        <div className="w-16 h-16 border-4 border-black bg-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        </div>
+                        <h2 className="text-3xl font-black uppercase mb-4 text-red-600 tracking-tighter">Focus Lost</h2>
+                        <p className="text-lg font-bold uppercase text-gray-700">Please return to the exam screen to continue.</p>
+                    </div>
+                </div>
+            )}
 
             {/* Success Overlay */}
             {submitted && (
