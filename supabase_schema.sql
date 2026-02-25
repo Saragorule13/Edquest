@@ -30,3 +30,13 @@ CREATE TABLE IF NOT EXISTS public.exam_attempts (
 );
 
 -- RLS policies could be added here if needed, but assuming authenticated users can insert attempts and admins can insert tests/questions.
+
+CREATE TABLE IF NOT EXISTS public.activity_logs (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    test_id uuid REFERENCES public.tests(id) ON DELETE CASCADE,
+    user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+    session_id text NOT NULL,
+    log_count integer NOT NULL DEFAULT 0,
+    logs jsonb NOT NULL DEFAULT '[]'::jsonb,
+    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);

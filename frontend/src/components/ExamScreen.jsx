@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import TopBar from './TopBar';
@@ -9,9 +9,67 @@ import BottomBar from './BottomBar';
 import Notification from './Notification';
 import ProctorAgent from './ProctorAgent';
 
+// ─── Activity Logger Hook ────────────────────────────────────────────────────
+const useActivityLogger = (testId) => {
+    const logsRef = useRef([]);
+    const sessionStartRef = useRef(Date.now());
+    const sessionIdRef = useRef(
+        `${Date.now()}-${Math.random().toString(36).substring(2, 10)}`
+    );
+
+    const log = useCallback((action, details = {}) => {
+        const entry = {
+            timestamp: new Date().toISOString(),
+            elapsedMs: Date.now() - sessionStartRef.current,
+            action,
+            testId,
+            ...details,
+        };
+        logsRef.current.push(entry);
+        console.log(
+            `%c[ACTIVITY LOG]%c ${action}`,
+            'background:#F5A623;color:#000;font-weight:bold;padding:2px 6px;border-radius:3px;',
+            'color:#333;font-weight:bold;',
+            entry
+        );
+    }, [testId]);
+
+    const getAllLogs = useCallback(() => [...logsRef.current], []);
+
+    const sendLogsToSupabase = useCallback(async (userId) => {
+        try {
+            const { data, error } = await supabase
+                .from('activity_logs')
+                .insert([{
+                    test_id: testId,
+                    user_id: userId || null,
+                    session_id: sessionIdRef.current,
+                    log_count: logsRef.current.length,
+                    logs: logsRef.current,
+                }])
+                .select('id')
+                .single();
+
+            if (error) throw error;
+
+            console.log(
+                '%c[ACTIVITY LOG]%c LOGS_SAVED_TO_SUPABASE',
+                'background:#22c55e;color:#000;font-weight:bold;padding:2px 6px;border-radius:3px;',
+                'color:#333;font-weight:bold;',
+                { id: data.id, logCount: logsRef.current.length }
+            );
+        } catch (error) {
+            console.error('[ACTIVITY LOG] Failed to save logs to Supabase:', error.message);
+        }
+    }, [testId]);
+
+    return { log, getAllLogs, sendLogsToSupabase };
+};
+
 const ExamScreen = () => {
     const { testId } = useParams();
     const navigate = useNavigate();
+    const { log, getAllLogs, sendLogsToSupabase } = useActivityLogger(testId);
 
     const [testInfo, setTestInfo] = useState(null);
     const [questions, setQuestions] = useState([]);
@@ -39,6 +97,7 @@ const ExamScreen = () => {
     useEffect(() => {
         const fetchExamData = async () => {
             if (!testId) return;
+            log('EXAM_SESSION_INIT', { status: 'loading' });
 
             try {
                 // Fetch test
@@ -59,8 +118,14 @@ const ExamScreen = () => {
 
                 if (qError) throw qError;
                 setQuestions(qData);
+
+                log('EXAM_DATA_LOADED', {
+                    testTitle: testData?.title,
+                    totalQuestions: qData?.length,
+                });
             } catch (error) {
                 console.error('Error fetching exam data:', error);
+                log('EXAM_LOAD_ERROR', { error: error.message });
                 addNotification('alert', 'ERROR', 'SYSTEM MSG: 500', 'Failed to load exam data.');
             } finally {
                 setLoading(false);
@@ -71,8 +136,14 @@ const ExamScreen = () => {
     }, [testId]);
 
     useEffect(() => {
-        const handleBlur = () => setIsBlurred(true);
-        const handleFocus = () => setIsBlurred(false);
+        const handleBlur = () => {
+            setIsBlurred(true);
+            log('FOCUS_LOST', { currentQuestion: currentQuestionIndex + 1 });
+        };
+        const handleFocus = () => {
+            setIsBlurred(false);
+            log('FOCUS_REGAINED', { currentQuestion: currentQuestionIndex + 1 });
+        };
 
         window.addEventListener('blur', handleBlur);
         window.addEventListener('focus', handleFocus);
@@ -81,11 +152,140 @@ const ExamScreen = () => {
             window.removeEventListener('blur', handleBlur);
             window.removeEventListener('focus', handleFocus);
         };
-    }, []);
+    }, [currentQuestionIndex, log]);
+
+    // ─── Block & log: copy, paste, cut, right-click, screenshots, dev tools ─────
+    useEffect(() => {
+        const warn = (msg) => addNotification('alert', 'BLOCKED', 'SECURITY', msg);
+
+        const handleCopy = (e) => {
+            e.preventDefault();
+            log('COPY_ATTEMPT', { currentQuestion: currentQuestionIndex + 1 });
+            warn('Copy is disabled during the exam.');
+        };
+        const handlePaste = (e) => {
+            e.preventDefault();
+            log('PASTE_ATTEMPT', { currentQuestion: currentQuestionIndex + 1 });
+            warn('Paste is disabled during the exam.');
+        };
+        const handleCut = (e) => {
+            e.preventDefault();
+            log('COPY_ATTEMPT', { currentQuestion: currentQuestionIndex + 1, variant: 'cut' });
+            warn('Cut is disabled during the exam.');
+        };
+        const handleContextMenu = (e) => {
+            e.preventDefault();
+            log('RIGHT_CLICK', { currentQuestion: currentQuestionIndex + 1 });
+        };
+        const handleDragStart = (e) => {
+            e.preventDefault();
+        };
+
+        const handleKeyDown = (e) => {
+            const key = e.key.toLowerCase();
+
+            // Block PrintScreen
+            if (e.key === 'PrintScreen') {
+                e.preventDefault();
+                log('KEY_COMBO', { key: 'PrintScreen', currentQuestion: currentQuestionIndex + 1 });
+                warn('Screenshots are disabled during the exam.');
+                // Clear clipboard to prevent screenshot capture
+                navigator.clipboard?.writeText?.('').catch(() => { });
+                return;
+            }
+
+            // Block F12 (dev tools)
+            if (e.key === 'F12') {
+                e.preventDefault();
+                log('KEY_COMBO', { key: 'F12', currentQuestion: currentQuestionIndex + 1 });
+                warn('Developer tools are disabled during the exam.');
+                return;
+            }
+
+            // Block Ctrl/Cmd shortcuts
+            if (e.ctrlKey || e.metaKey) {
+                // Block: Ctrl+C, Ctrl+V, Ctrl+X, Ctrl+A, Ctrl+P, Ctrl+S, Ctrl+U
+                if (['c', 'v', 'x', 'a', 'p', 's', 'u'].includes(key)) {
+                    e.preventDefault();
+                    log('KEY_COMBO', { key: e.key, ctrl: true, currentQuestion: currentQuestionIndex + 1 });
+                    if (key === 'c' || key === 'x') warn('Copy is disabled during the exam.');
+                    else if (key === 'v') warn('Paste is disabled during the exam.');
+                    else if (key === 'p') warn('Printing is disabled during the exam.');
+                    else if (key === 'u') warn('View source is disabled during the exam.');
+                    return;
+                }
+
+                // Block: Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C (dev tools)
+                if (e.shiftKey && ['i', 'j', 'c'].includes(key)) {
+                    e.preventDefault();
+                    log('KEY_COMBO', { key: `Ctrl+Shift+${e.key}`, currentQuestion: currentQuestionIndex + 1 });
+                    warn('Developer tools are disabled during the exam.');
+                    return;
+                }
+
+                // Log any other Ctrl combos
+                log('KEY_COMBO', {
+                    key: e.key,
+                    ctrl: e.ctrlKey,
+                    alt: e.altKey,
+                    shift: e.shiftKey,
+                    currentQuestion: currentQuestionIndex + 1,
+                });
+            }
+        };
+
+        // Disable text selection via CSS
+        document.body.style.userSelect = 'none';
+        document.body.style.webkitUserSelect = 'none';
+        document.body.style.msUserSelect = 'none';
+
+        document.addEventListener('copy', handleCopy);
+        document.addEventListener('paste', handlePaste);
+        document.addEventListener('cut', handleCut);
+        document.addEventListener('contextmenu', handleContextMenu);
+        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('dragstart', handleDragStart);
+
+        return () => {
+            // Restore text selection
+            document.body.style.userSelect = '';
+            document.body.style.webkitUserSelect = '';
+            document.body.style.msUserSelect = '';
+
+            document.removeEventListener('copy', handleCopy);
+            document.removeEventListener('paste', handlePaste);
+            document.removeEventListener('cut', handleCut);
+            document.removeEventListener('contextmenu', handleContextMenu);
+            document.removeEventListener('keydown', handleKeyDown);
+            document.removeEventListener('dragstart', handleDragStart);
+        };
+    }, [currentQuestionIndex, log]);
+
+    // Log visibility change (tab switch)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            log('VISIBILITY_CHANGE', {
+                hidden: document.hidden,
+                currentQuestion: currentQuestionIndex + 1,
+            });
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [currentQuestionIndex, log]);
 
     const handleOptionSelect = (optionIndex) => {
         const currentQuestion = questions[currentQuestionIndex];
         const selectedText = currentQuestion.options[optionIndex];
+        const previousAnswer = answers[currentQuestionIndex];
+
+        log('OPTION_SELECTED', {
+            questionIndex: currentQuestionIndex,
+            questionNumber: currentQuestionIndex + 1,
+            selectedOption: selectedText,
+            optionIndex,
+            previousAnswer: previousAnswer || null,
+            wasChanged: !!previousAnswer && previousAnswer !== selectedText,
+        });
 
         setAnswers(prev => ({
             ...prev,
@@ -95,12 +295,20 @@ const ExamScreen = () => {
 
     const handlePreviousClick = () => {
         if (currentQuestionIndex > 0) {
+            log('NAVIGATE_PREVIOUS', {
+                from: currentQuestionIndex + 1,
+                to: currentQuestionIndex,
+            });
             setCurrentQuestionIndex(currentQuestionIndex - 1);
         }
     };
 
     const handleNextClick = () => {
         if (currentQuestionIndex < questions.length - 1) {
+            log('NAVIGATE_NEXT', {
+                from: currentQuestionIndex + 1,
+                to: currentQuestionIndex + 2,
+            });
             setCurrentQuestionIndex(currentQuestionIndex + 1);
         }
     };
@@ -119,6 +327,14 @@ const ExamScreen = () => {
 
         // Final score out of 100 optional, but let's just use raw points.
         const calculatedScore = totalPoints > 0 ? (earnedPoints / totalPoints) * 100 : 0;
+
+        const answeredCount = Object.keys(answers).length;
+        log('EXAM_SUBMIT_INITIATED', {
+            answeredCount,
+            totalQuestions: questions.length,
+            unanswered: questions.length - answeredCount,
+            score: calculatedScore.toFixed(1),
+        });
 
         setSubmitting(true);
 
@@ -144,6 +360,22 @@ const ExamScreen = () => {
             setScore(calculatedScore);
             setSubmitted(true);
 
+            log('EXAM_SUBMITTED_SUCCESS', {
+                score: calculatedScore.toFixed(1),
+                userId: user?.id,
+            });
+
+            // Print full activity log summary on submit
+            console.groupCollapsed(
+                '%c[ACTIVITY LOG] 📋 Full Session Log',
+                'background:#000;color:#F5A623;font-weight:bold;padding:4px 8px;border-radius:3px;font-size:14px;'
+            );
+            console.table(getAllLogs());
+            console.groupEnd();
+
+            // Save activity logs to Supabase
+            await sendLogsToSupabase(user?.id);
+
             addNotification(
                 'success',
                 'SUCCESS',
@@ -152,6 +384,7 @@ const ExamScreen = () => {
             );
         } catch (error) {
             console.error('Error submitting exam:', error);
+            log('EXAM_SUBMIT_ERROR', { error: error.message });
             addNotification('alert', 'ERROR', 'SYSTEM MSG: 500', 'Failed to submit exam.');
         } finally {
             setSubmitting(false);
