@@ -18,7 +18,9 @@ import Settings from './components/admin/Settings';
 import SystemStatus from './components/admin/SystemStatus';
 import AddTest from './components/admin/AddTest';
 import AddQuestions from './components/admin/AddQuestions';
+import AddVivaTopic from './components/admin/AddVivaTopic';
 import StudentDashboard from './components/StudentDashboard';
+import VivaSession from './components/VivaSession';
 import { supabase } from './supabaseClient';
 
 function MainLayout() {
@@ -70,8 +72,8 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<MainLayout />} />
-        <Route path="/login" element={<Login/>} />
-        
+        <Route path="/login" element={<Login />} />
+
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="live" element={<LiveMonitoring />} />
@@ -80,31 +82,40 @@ function App() {
           <Route path="users" element={<UserManagement />} />
           <Route path="add-test" element={<AddTest />} />
           <Route path="add-questions" element={<AddQuestions />} />
+          <Route path="viva-topics" element={<AddVivaTopic />} />
           <Route path="settings" element={<Settings />} />
           <Route path="status" element={<SystemStatus />} />
         </Route>
-        <Route 
-          path="/dashboard" 
+        <Route
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <StudentDashboard />
             </ProtectedRoute>
-          } 
+          }
         />
         <Route
-        path='/exam'
-        element={
-          <StudentDashboard/>
-        }>
+          path='/exam'
+          element={
+            <StudentDashboard />
+          }>
 
         </Route>
-        <Route 
-          path="/exam/:testId" 
+        <Route
+          path="/exam/:testId"
           element={
             <ProtectedRoute>
               <ExamScreen />
             </ProtectedRoute>
-          } 
+          }
+        />
+        <Route
+          path="/viva/:topicId"
+          element={
+            <ProtectedRoute>
+              <VivaSession />
+            </ProtectedRoute>
+          }
         />
       </Routes>
     </BrowserRouter>

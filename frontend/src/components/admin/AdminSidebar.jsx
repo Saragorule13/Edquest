@@ -2,10 +2,10 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 
 const AdminSidebar = () => {
-    
+
     // Style for inactive links
     const inactiveClass = "flex items-center gap-4 px-6 py-4 hover:bg-gray-100 cursor-pointer text-gray-600 transition-colors";
-    
+
     // Style for active link
     const activeClass = "flex items-center gap-4 px-6 py-4 bg-black text-white cursor-pointer";
 
@@ -24,8 +24,8 @@ const AdminSidebar = () => {
 
             {/* Navigation Links */}
             <nav className="flex-1 flex flex-col pt-6 font-bold text-gray-800">
-                <NavLink 
-                    to="/admin" 
+                <NavLink
+                    to="/admin"
                     end
                     className={({ isActive }) => isActive ? activeClass : inactiveClass}
                 >
@@ -37,9 +37,9 @@ const AdminSidebar = () => {
                     </svg>
                     Dashboard
                 </NavLink>
-                
-                <NavLink 
-                    to="/admin/live" 
+
+                <NavLink
+                    to="/admin/live"
                     className={({ isActive }) => isActive ? activeClass : inactiveClass}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -48,9 +48,9 @@ const AdminSidebar = () => {
                     </svg>
                     Live Monitoring
                 </NavLink>
-                
-                <NavLink 
-                    to="/admin/archive" 
+
+                <NavLink
+                    to="/admin/archive"
                     className={({ isActive }) => isActive ? activeClass : inactiveClass}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -58,9 +58,9 @@ const AdminSidebar = () => {
                     </svg>
                     Session Archive
                 </NavLink>
-                
-                <NavLink 
-                    to="/admin/violations" 
+
+                <NavLink
+                    to="/admin/violations"
                     className={({ isActive }) => isActive ? activeClass : inactiveClass}
                 >
                     <div className="flex items-center gap-4 w-full">
@@ -75,9 +75,9 @@ const AdminSidebar = () => {
                         <span className="bg-[#F5A623] text-black text-xs px-2 py-0.5 font-bold border-2 border-black ml-auto">42</span>
                     </div>
                 </NavLink>
-                
-                <NavLink 
-                    to="/admin/users" 
+
+                <NavLink
+                    to="/admin/users"
                     className={({ isActive }) => isActive ? activeClass : inactiveClass}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -89,8 +89,8 @@ const AdminSidebar = () => {
                     User Management
                 </NavLink>
 
-                <NavLink 
-                    to="/admin/add-test" 
+                <NavLink
+                    to="/admin/add-test"
                     className={({ isActive }) => isActive ? activeClass : inactiveClass}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -102,8 +102,8 @@ const AdminSidebar = () => {
                     Create Test
                 </NavLink>
 
-                <NavLink 
-                    to="/admin/add-questions" 
+                <NavLink
+                    to="/admin/add-questions"
                     className={({ isActive }) => isActive ? activeClass : inactiveClass}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -113,9 +113,21 @@ const AdminSidebar = () => {
                     </svg>
                     Add Questions
                 </NavLink>
-                
-                <NavLink 
-                    to="/admin/settings" 
+
+                <NavLink
+                    to="/admin/viva-topics"
+                    className={({ isActive }) => isActive ? activeClass : inactiveClass}
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                        <line x1="12" x2="12" y1="19" y2="22" />
+                    </svg>
+                    Viva Topics
+                </NavLink>
+
+                <NavLink
+                    to="/admin/settings"
                     className={({ isActive }) => isActive ? activeClass : inactiveClass}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -124,9 +136,9 @@ const AdminSidebar = () => {
                     </svg>
                     Settings
                 </NavLink>
-                
-                <NavLink 
-                    to="/admin/status" 
+
+                <NavLink
+                    to="/admin/status"
                     className={({ isActive }) => isActive ? activeClass : inactiveClass}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
