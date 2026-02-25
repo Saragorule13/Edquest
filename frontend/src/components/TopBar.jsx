@@ -1,6 +1,17 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 const TopBar = () => {
+    const [now, setNow] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => setNow(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+
     return (
         <div className="flex border-b-4 border-black bg-white sticky top-0 z-50">
 
@@ -18,7 +29,7 @@ const TopBar = () => {
                 <div className="flex items-center gap-8">
                     <div className="flex items-center gap-2 border-2 border-black px-4 py-1 bg-white shadow-neo-sm font-bold text-lg">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-                        01:24:05
+                        {hours}<span className="animate-pulse">:</span>{minutes}<span className="animate-pulse">:</span>{seconds}
                     </div>
 
                     <div className="flex items-center gap-2 text-sm font-bold border-r-2 border-black pr-8">
@@ -44,3 +55,4 @@ const TopBar = () => {
 };
 
 export default TopBar;
+
