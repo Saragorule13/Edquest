@@ -84,6 +84,8 @@ const ExamScreen = () => {
     const [submitted, setSubmitted] = useState(false);
     const [score, setScore] = useState(0);
     const [isBlurred, setIsBlurred] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const fullscreenWarningCount = useRef(0);
 
     const addNotification = (type, title, systemMsg, message) => {
         const id = Date.now();
@@ -134,6 +136,50 @@ const ExamScreen = () => {
 
         fetchExamData();
     }, [testId]);
+
+    // ─── Auto-enter fullscreen when exam loads ─────────────────────────────
+    useEffect(() => {
+        if (!loading && questions.length > 0 && !submitted) {
+            const enterFullscreen = async () => {
+                try {
+                    if (!document.fullscreenElement) {
+                        await document.documentElement.requestFullscreen();
+                        setIsFullscreen(true);
+                        log('FULLSCREEN_ENTERED', { auto: true });
+                    }
+                } catch (err) {
+                    console.warn('Fullscreen request failed:', err.message);
+                    log('FULLSCREEN_REQUEST_FAILED', { error: err.message });
+                }
+            };
+            enterFullscreen();
+        }
+    }, [loading, questions.length, submitted, log]);
+
+    // ─── Detect fullscreen exit ────────────────────────────────────────────
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            const isFS = !!document.fullscreenElement;
+            setIsFullscreen(isFS);
+
+            if (!isFS && !submitted) {
+                fullscreenWarningCount.current += 1;
+                log('FULLSCREEN_EXITED', {
+                    warningCount: fullscreenWarningCount.current,
+                    currentQuestion: currentQuestionIndex + 1,
+                });
+                addNotification(
+                    'alert',
+                    'FULLSCREEN EXIT',
+                    `WARNING #${fullscreenWarningCount.current}`,
+                    'You exited fullscreen. Please stay in fullscreen mode during the exam. This incident has been logged.'
+                );
+            }
+        };
+
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    }, [currentQuestionIndex, submitted, log]);
 
     useEffect(() => {
         const handleBlur = () => {
@@ -359,6 +405,11 @@ const ExamScreen = () => {
 
             setScore(calculatedScore);
             setSubmitted(true);
+
+            // Exit fullscreen on submit
+            if (document.fullscreenElement) {
+                document.exitFullscreen().catch(() => { });
+            }
 
             log('EXAM_SUBMITTED_SUCCESS', {
                 score: calculatedScore.toFixed(1),
