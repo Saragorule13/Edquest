@@ -11,7 +11,8 @@ const customCookieStorage = {
   },
   setItem: (key, value) => {
     if (typeof document === 'undefined') return;
-    document.cookie = `${key}=${encodeURIComponent(value)}; path=/; max-age=31536000; SameSite=Lax; Secure`;
+    const isSecure = window.location.protocol === 'https:';
+    document.cookie = `${key}=${encodeURIComponent(value)}; path=/; max-age=31536000; SameSite=Lax${isSecure ? '; Secure' : ''}`;
   },
   removeItem: (key) => {
     if (typeof document === 'undefined') return;
